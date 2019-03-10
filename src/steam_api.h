@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include<utility>
 
 #define STEAM_API extern "C" __attribute__ ((visibility("default")))
 

@@ -10192,8 +10192,8 @@
     <param><type>int</type> <name>iMessage</name></param>
     <param dir="out" size="cchTextMax"><type>void</type>* <name>prgchText</name></param>
     <param><type>int</type> <name>cchTextMax</name></param>
-    <param dir="in" fixed-size="1"><type ref-id="EChatEntryType_v1">EChatEntryType</type>* <name></name></param>
-    <param dir="in" fixed-size="1"><type>CSteamID</type>* <name></name></param>
+    <param dir="in" fixed-size="1"><type ref-id="EChatEntryType_v1">EChatEntryType</type>* <name><!--FIXME-->pEntryType</name></param>
+    <param dir="in" fixed-size="1"><type>CSteamID</type>* <name><!--FIXME-->pSteamID</name></param>
   </method>
   <method name="GetVoice" id="User::GetVoice_v1">
     <return ref-id="EVoiceResult_v1">EVoiceResult</return>

@@ -2,6 +2,7 @@ project('freesteamapi', ['cpp', 'c'])
 
 gen_types = find_program('gen/gen_types.py')
 gen_iface = find_program('gen/gen_iface.py')
+gen_iface_loader = find_program('gen/gen_iface_loader.py')
 
 steam_types = custom_target(
     'steam_types.h',
@@ -17,14 +18,19 @@ ifaces = custom_target(
     command : [gen_iface, '@INPUT@', '@OUTPUT@'],
 )
 
+iface_loader = custom_target(
+    'interface_loader.h',
+    output : 'interface_loader.h',
+    input : 'steamapi.xml',
+    command : [gen_iface_loader, '@INPUT@', '@OUTPUT@'],
+)
+
 steam_api_srcs = [
     'src/steam_api.cc',
     steam_types,
     ifaces,
-    'src/UGC.cc',
+    iface_loader,
     'src/User.cc',
-    'src/Utils.cc',
-    'src/UserStats.cc',
 ]
 
 inih_srcs = [
