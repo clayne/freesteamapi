@@ -3,6 +3,7 @@
 /**** GetHSteamUser****/
 HSteamUser User_SteamUser019_GetHSteamUser() {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -45,7 +46,8 @@ HSteamUser User_SteamUser009_GetHSteamUser() {
 /**** BLoggedOn****/
 bool User_SteamUser019_BLoggedOn() {
     // FIXME: implement
-    return false;
+    STUB();
+    return true;
 }
 
 bool User_SteamUser018_BLoggedOn() {
@@ -87,6 +89,7 @@ bool User_SteamUser009_BLoggedOn() {
 /**** GetSteamID****/
 CSteamID User_SteamUser019_GetSteamID() {
     // FIXME: implement
+    STUB();
     return CSteamID();
 }
 
@@ -129,6 +132,7 @@ CSteamID User_SteamUser009_GetSteamID() {
 /**** InitiateGameConnection****/
 int User_SteamUser019_InitiateGameConnection(void* pAuthBlob, int cbMaxAuthBlob, CSteamID steamIDGameServer, uint32 unIPServer, uint16 usPortServer, bool bSecure) {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -171,6 +175,7 @@ int User_SteamUser009_InitiateGameConnection(void* pAuthBlob, int cbMaxAuthBlob,
 /**** TerminateGameConnection****/
 void User_SteamUser019_TerminateGameConnection(uint32 unIPServer, uint16 usPortServer) {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_TerminateGameConnection(uint32 unIPServer, uint16 usPortServer) {
@@ -212,6 +217,7 @@ void User_SteamUser009_TerminateGameConnection(uint32 unIPServer, uint16 usPortS
 /**** TrackAppUsageEvent****/
 void User_SteamUser019_TrackAppUsageEvent(CGameID gameID, int eAppUsageEvent, char* pchExtraInfo) {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_TrackAppUsageEvent(CGameID gameID, int eAppUsageEvent, char* pchExtraInfo) {
@@ -253,11 +259,13 @@ void User_SteamUser009_TrackAppUsageEvent(CGameID gameID, int eAppUsageEvent, ch
 /**** RefreshSteam2Login****/
 void User_SteamUser009_RefreshSteam2Login() {
     // FIXME: implement
+    STUB();
 }
 
 /**** GetUserDataFolder****/
 bool User_SteamUser019_GetUserDataFolder(char* pchBuffer, int cubBuffer) {
     // FIXME: implement
+    STUB();
     return false;
 }
 
@@ -292,6 +300,7 @@ bool User_SteamUser011_GetUserDataFolder(char* pchBuffer, int cubBuffer) {
 /**** StartVoiceRecording****/
 void User_SteamUser019_StartVoiceRecording() {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_StartVoiceRecording() {
@@ -325,6 +334,7 @@ void User_SteamUser011_StartVoiceRecording() {
 /**** StopVoiceRecording****/
 void User_SteamUser019_StopVoiceRecording() {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_StopVoiceRecording() {
@@ -358,6 +368,7 @@ void User_SteamUser011_StopVoiceRecording() {
 /**** GetCompressedVoice****/
 EVoiceResult_v1 User_SteamUser012_GetCompressedVoice(void* pDestBuffer, uint32 cbDestBufferSize, uint32* nBytesWritten) {
     // FIXME: implement
+    STUB();
     return k_EVoiceResultNoData;
 }
 
@@ -368,6 +379,7 @@ EVoiceResult_v1 User_SteamUser011_GetCompressedVoice(void* pDestBuffer, uint32 c
 /**** DecompressVoice****/
 EVoiceResult_v1 User_SteamUser019_DecompressVoice(void* pCompressed, uint32 cbCompressed, void* pDestBuffer, uint32 cbDestBufferSize, uint32* nBytesWritten, uint32 nDesiredSampleRate) {
     // FIXME: implement
+    STUB();
     return k_EVoiceResultNoData;
 }
 
@@ -404,6 +416,7 @@ EVoiceResult_v1 User_SteamUser011_DecompressVoice(void* pCompressed, uint32 cbCo
 /**** GetAuthSessionTicket****/
 HAuthTicket User_SteamUser019_GetAuthSessionTicket(void* pTicket, int cbMaxTicket, uint32* pcbTicket) {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -434,6 +447,7 @@ HAuthTicket User_SteamUser012_GetAuthSessionTicket(void* pTicket, int cbMaxTicke
 /**** BeginAuthSession****/
 EBeginAuthSessionResult_v1 User_SteamUser019_BeginAuthSession(void* pAuthTicket, int cbAuthTicket, CSteamID steamID) {
     // FIXME: implement
+    STUB();
     return k_EBeginAuthSessionResultOK;
 }
 
@@ -464,6 +478,7 @@ EBeginAuthSessionResult_v1 User_SteamUser012_BeginAuthSession(void* pAuthTicket,
 /**** EndAuthSession****/
 void User_SteamUser019_EndAuthSession(CSteamID steamID) {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_EndAuthSession(CSteamID steamID) {
@@ -493,6 +508,7 @@ void User_SteamUser012_EndAuthSession(CSteamID steamID) {
 /**** CancelAuthTicket****/
 void User_SteamUser019_CancelAuthTicket(HAuthTicket hAuthTicket) {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_CancelAuthTicket(HAuthTicket hAuthTicket) {
@@ -522,6 +538,7 @@ void User_SteamUser012_CancelAuthTicket(HAuthTicket hAuthTicket) {
 /**** UserHasLicenseForApp****/
 EUserHasLicenseForAppResult_v1 User_SteamUser019_UserHasLicenseForApp(CSteamID steamID, AppId_t appID) {
     // FIXME: implement
+    STUB();
     return k_EUserHasLicenseResultHasLicense;
 }
 
@@ -552,6 +569,7 @@ EUserHasLicenseForAppResult_v1 User_SteamUser012_UserHasLicenseForApp(CSteamID s
 /**** GetAvailableVoice****/
 EVoiceResult_v1 User_SteamUser019_GetAvailableVoice(uint32* pcbCompressed, uint32* pcbUncompressed, uint32 nUncompressedVoiceDesiredSampleRate) {
     // FIXME: implement
+    STUB();
     return k_EVoiceResultNoData;
 }
 
@@ -580,6 +598,7 @@ EVoiceResult_v1 User_SteamUser013_GetAvailableVoice(uint32* pcbCompressed, uint3
 /**** GetVoice****/
 EVoiceResult_v1 User_SteamUser019_GetVoice(bool bWantCompressed, void* pDestBuffer, uint32 cbDestBufferSize, uint32* nBytesWritten, bool bWantUncompressed, void* pUncompressedDestBuffer, uint32 cbUncompressedDestBufferSize, uint32* nUncompressBytesWritten, uint32 nUncompressedVoiceDesiredSampleRate) {
     // FIXME: implement
+    STUB();
     return k_EVoiceResultNoData;
 }
 
@@ -608,6 +627,7 @@ EVoiceResult_v1 User_SteamUser013_GetVoice(bool bWantCompressed, void* pDestBuff
 /**** BIsBehindNAT****/
 bool User_SteamUser019_BIsBehindNAT() {
     // FIXME: implement
+    STUB();
     return false;
 }
 
@@ -630,6 +650,7 @@ bool User_SteamUser014_BIsBehindNAT() {
 /**** AdvertiseGame****/
 void User_SteamUser019_AdvertiseGame(CSteamID steamIDGameServer, uint32 unIPServer, uint16 usPortServer) {
     // FIXME: implement
+    STUB();
 }
 
 void User_SteamUser018_AdvertiseGame(CSteamID steamIDGameServer, uint32 unIPServer, uint16 usPortServer) {
@@ -651,6 +672,7 @@ void User_SteamUser014_AdvertiseGame(CSteamID steamIDGameServer, uint32 unIPServ
 /**** RequestEncryptedAppTicket****/
 SteamAPICall_t User_SteamUser019_RequestEncryptedAppTicket(void* pDataToInclude, int cbDataToInclude) {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -673,6 +695,7 @@ SteamAPICall_t User_SteamUser014_RequestEncryptedAppTicket(void* pDataToInclude,
 /**** GetEncryptedAppTicket****/
 bool User_SteamUser019_GetEncryptedAppTicket(void* pTicket, int cbMaxTicket, uint32* pcbTicket) {
     // FIXME: implement
+    STUB();
     return false;
 }
 
@@ -695,6 +718,7 @@ bool User_SteamUser014_GetEncryptedAppTicket(void* pTicket, int cbMaxTicket, uin
 /**** GetVoiceOptimalSampleRate****/
 uint32 User_SteamUser019_GetVoiceOptimalSampleRate() {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -713,6 +737,7 @@ uint32 User_SteamUser016_GetVoiceOptimalSampleRate() {
 /**** GetGameBadgeLevel****/
 int User_SteamUser019_GetGameBadgeLevel(int nSeries, bool bFoil) {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -727,6 +752,7 @@ int User_SteamUser017_GetGameBadgeLevel(int nSeries, bool bFoil) {
 /**** GetPlayerSteamLevel****/
 int User_SteamUser019_GetPlayerSteamLevel() {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -741,6 +767,7 @@ int User_SteamUser017_GetPlayerSteamLevel() {
 /**** RequestStoreAuthURL****/
 SteamAPICall_t User_SteamUser019_RequestStoreAuthURL(char* pchRedirectURL) {
     // FIXME: implement
+    STUB();
     return 0;
 }
 
@@ -751,24 +778,28 @@ SteamAPICall_t User_SteamUser018_RequestStoreAuthURL(char* pchRedirectURL) {
 /**** BIsPhoneVerified****/
 bool User_SteamUser019_BIsPhoneVerified() {
     // FIXME: implement
+    STUB();
     return false;
 }
 
 /**** BIsTwoFactorEnabled****/
 bool User_SteamUser019_BIsTwoFactorEnabled() {
     // FIXME: implement
+    STUB();
     return false;
 }
 
 /**** BIsPhoneIdentifying****/
 bool User_SteamUser019_BIsPhoneIdentifying() {
     // FIXME: implement
+    STUB();
     return false;
 }
 
 /**** BIsPhoneRequiringVerification****/
 bool User_SteamUser019_BIsPhoneRequiringVerification() {
     // FIXME: implement
+    STUB();
     return false;
 }
 

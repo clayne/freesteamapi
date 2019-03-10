@@ -31,6 +31,9 @@ steam_api_srcs = [
     ifaces,
     iface_loader,
     'src/User.cc',
+    'src/UserStats.cc',
+    'src/Utils.cc',
+    'src/UGC.cc',
 ]
 
 inih_srcs = [

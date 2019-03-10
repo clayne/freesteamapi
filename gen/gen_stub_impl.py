@@ -71,6 +71,7 @@ for method_name in methods.keys():
         if first:
             first = False
             print("    // FIXME: implement")
+            print("    STUB();")
             if ret[:3] == "int" or ret[:4] == "uint" or ret[:6] == "HSteam" or ret == "SteamAPICall_t":
                 print("    return 0;")
             elif ret[-1] == "*":

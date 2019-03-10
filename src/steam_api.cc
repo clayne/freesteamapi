@@ -92,6 +92,9 @@ STEAM_API bool SteamAPI_Init()
     }
 
     #define STEAMAPI_ENABLE_User
+    #define STEAMAPI_ENABLE_UserStats
+    #define STEAMAPI_ENABLE_Utils
+    #define STEAMAPI_ENABLE_UGC
     #include "interface_loader.h"
 
     return true;
