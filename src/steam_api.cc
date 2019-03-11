@@ -5,10 +5,13 @@
 #include <map>
 #include <iterator>
 #include <algorithm>
+#include <cassert>
+#include <iomanip>
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
 #include <openssl/sha.h>
+#include <sys/mman.h>
 #include <sys/mman.h>
 
 #include "steam_api.h"
@@ -50,6 +53,7 @@ ENTRYPOINT(ParentalSettings);
 
 STEAM_API bool SteamAPI_Init()
 {
+    std::abort();
     return true;
 }
 
@@ -527,9 +531,46 @@ public:
     }
 };
 
-void patch_entrypoint(size_t target, size_t entrypoint)
+void patch_entrypoint(size_t target_loc, size_t entrypoint_loc, size_t scratch_loc)
 {
-    // FIXME
+    // patching by overwriting the first 7 bytes of entrypoint
+    // We cannot use more than 7 bytes because that's the length of some
+    // SteamAPI functions (singletons for interfaces)
+    //   :> !rasm2 -a x86 -b 64 'mov eax, 0x87654321; jmp eax'
+    //   b821436587ffe0
+    // gives us 32 bits of address space
+    // works on x86_64 and i386
+    // this jumps to the scratch buffer where we have enough space to
+    // jump to arbitrary locations:
+    //  :> !rasm2 -a x86 -b 32 'mov rax, 0xcccccccceeeeeeee; jmp rax'
+    //  48b8eeeeeeeeccccccccffe0
+    //
+
+    assert(scratch_loc < 0xffffffff);
+
+    // FIXME this only works for one symbol because we always overwrite
+    uint8_t *scratch_code = reinterpret_cast<uint8_t *>(scratch_loc);
+    scratch_code[0] = 0x48;
+    scratch_code[1] = 0xb8;
+    scratch_code[2] = static_cast<uint8_t>(target_loc);
+    scratch_code[3] = static_cast<uint8_t>(target_loc >> 8);
+    scratch_code[4] = static_cast<uint8_t>(target_loc >> 16);
+    scratch_code[5] = static_cast<uint8_t>(target_loc >> 24);
+    scratch_code[6] = static_cast<uint8_t>(target_loc >> 32);
+    scratch_code[7] = static_cast<uint8_t>(target_loc >> 40);
+    scratch_code[8] = static_cast<uint8_t>(target_loc >> 48);
+    scratch_code[9] = static_cast<uint8_t>(target_loc >> 56);
+    scratch_code[10] = 0xff;
+    scratch_code[11] = 0xe0;
+
+    uint8_t *patch = reinterpret_cast<uint8_t *>(entrypoint_loc);
+    patch[0] = 0xb8;
+    patch[1] = static_cast<uint8_t>(scratch_loc);
+    patch[2] = static_cast<uint8_t>(scratch_loc >> 8);
+    patch[3] = static_cast<uint8_t>(scratch_loc >> 16);
+    patch[4] = static_cast<uint8_t>(scratch_loc >> 24);
+    patch[5] = 0xff;
+    patch[6] = 0xe0;
 }
 
 __attribute__ ((constructor))
@@ -570,14 +611,27 @@ static void init() {
         if (!std::equal(self_hash.begin(), self_hash.end(), target_hash.begin()))
             return;
 
-        auto guard = WriteableMemoryGuard(map);
+        // sha1sum matches
+        // do the entrypoint patching!
+        // we might need scratch memory to put some code into in the lower
+
+        // 32 bit address range
+        // FIXME handle the case that there already is something mapped at the specific address
+        //       and choose new address
+        void *scratch_buf = mmap(reinterpret_cast<void *>(0x2a000000), 1024*1024, PROT_EXEC|PROT_READ, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+        size_t scratch_loc = reinterpret_cast<size_t>(scratch_buf);
+        assert(scratch_loc == 0x2a000000);
+        MemoryMap scratch_map(scratch_loc, scratch_loc + (1024*1024), PROT_EXEC|PROT_READ);
+
+        // make sure both the exexutable and scratch memory are writeable for patching
+        auto guard1 = WriteableMemoryGuard(map);
+        auto guard2 = WriteableMemoryGuard(scratch_map);
+
         const std::string& sym_location = section.get(std::string("SteamAPI_Init"), std::string(""));
-        if (sym_location != "")
-            patch_entrypoint(reinterpret_cast<size_t>(SteamAPI_Init), from_hex(sym_location));
+        if (sym_location != "") {
+            patch_entrypoint(reinterpret_cast<size_t>(SteamAPI_Init), from_hex(sym_location), scratch_loc);
+        }
         
     });
-
-    // FIXME abort as long as patch_entrypoint is not implemented
-    std::abort();
 }
 

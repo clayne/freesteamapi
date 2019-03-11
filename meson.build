@@ -1,4 +1,4 @@
-project('freesteamapi', ['cpp', 'c'])
+project('freesteamapi', ['cpp'])
 
 gen_types = find_program('gen/gen_types.py')
 gen_iface = find_program('gen/gen_iface.py')
