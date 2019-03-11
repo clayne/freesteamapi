@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <iterator>
+#include <algorithm>
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
@@ -13,33 +14,8 @@
 
 #include "steam_api.h"
 
-static ISteamApps *sapiApps = NULL;
-static ISteamAppList *sapiAppList = NULL;
-static ISteamClient *sapiClient = NULL;
-static ISteamController *sapiController = NULL;
-static ISteamFriends *sapiFriends = NULL;
-static ISteamHTMLSurface *sapiHTMLSurface = NULL;
-static ISteamHTTP *sapiHTTP = NULL;
-static ISteamInventory *sapiInventory = NULL;
-static ISteamMatchmaking *sapiMatchmaking = NULL;
-static ISteamMatchmakingServers *sapiMatchmakingServers = NULL;
-static ISteamMusic *sapiMusic = NULL;
-static ISteamMusicRemote *sapiMusicRemote = NULL;
-static ISteamNetworking *sapiNetworking = NULL;
-static ISteamRemoteStorage *sapiRemoteStorage = NULL;
-static ISteamScreenshots *sapiScreenshots = NULL;
-static ISteamUGC *sapiUGC = NULL;
-static ISteamUser *sapiUser = NULL;
-static ISteamUserStats *sapiUserStats = NULL;
-static ISteamUtils *sapiUtils = NULL;
-static ISteamVideo *sapiVideo = NULL;
-static ISteamAppTicket *sapiAppTicket = NULL;
-static ISteamGameServer *sapiGameServer = NULL;
-static ISteamGameServerStats *sapiGameServerStats = NULL;
-static ISteamGameCoordinator *sapiGameCoordinator = NULL;
-static ISteamParentalSettings *sapiParentalSettings = NULL;
-
 #define ENTRYPOINT(Name) \
+    ISteam ##Name *sapi ##Name = NULL; \
     STEAM_API ISteam ##Name *Steam ##Name() \
     { \
         if (!sapi ##Name) \
@@ -238,224 +214,316 @@ ISteamGameCoordinator
 ISteamParentalSettings
 #endif
 
-void patch_entrypoint(void *to, unsigned int from)
-{
-    uint8_t *p = reinterpret_cast<uint8_t *>(from);
-    std::cout << std::hex << static_cast<unsigned int>(*p) << std::endl;
-    std::cout << std::hex << static_cast<unsigned int>(*(p+1)) << std::endl;
-    std::cout << std::hex << static_cast<unsigned int>(*(p+2)) << std::endl;
-
-    *p = 0;
-    *(p+1) = 0;
-    *(p+2) = 0;
-}
-
-struct init_info {
-    const std::string &self_exe;
-    uint8_t self_hash[SHA_DIGEST_LENGTH];
+enum ini_token_type {
+    INI_TOKEN_SECTION,
+    INI_TOKEN_ENTRY,
+    INI_TOKEN_DONE,
 };
 
-int ini_handle(void* user, const char* csection, const char* cname, const char* cvalue)
+struct ini_token {
+    enum ini_token_type type;
+    const char *section;
+    const char* key;
+    const char* value;
+};
+
+template<typename Func>
+static bool parse_ini(std::ifstream& stream, Func f)
 {
-    init_info *info = static_cast<init_info*>(user);
+    bool inside_section = false;
+    std::string line;
+    while(std::getline(stream, line)) {
+        auto it = line.begin();
+        auto end = line.end();
+        // empty lines
+        if (it == end)
+            continue;
 
-    // we handle Entrypoint sections here only
-    auto section = std::string(csection);
-    if (section.find("Entrypoints ") != 0)
-        return 1;
+        // whitespace lines
+        if (it != end && (std::isspace(*it) || *it == ';' || *it == '#')) {
+            while(it != end && std::isspace(*it)) ++it;
+            if (it == end || *it == ';' || *it == '#')
+                continue;
+            else
+                return false;
+        }
 
-    auto target_hex = section.substr(12);
-    if (target_hex.length() != SHA_DIGEST_LENGTH*2) {
-        ERR("Entrypoint sha1sum is faulty");
-        std::abort();
+        // sections
+        if (*it == '[') {
+            it++;
+            auto section_end = std::find(it, end, ']');
+            if (section_end == end)
+                return false;
+            std::string section(it, section_end);
+            it = section_end + 1;
+
+            while(it != end && std::isspace(*it)) ++it;
+            if (it != end && *it != ';' && *it != '#')
+                return false;
+
+            struct ini_token token {
+                INI_TOKEN_SECTION,
+                section.c_str(),
+                NULL,
+            };
+            f(token);
+            inside_section = true;
+            continue;
+        }
+
+        // key-value pairs
+        if (inside_section) {
+            auto data_end = std::min(std::find(it, end, '#'), std::find(it, end, ';'));
+            auto seperator = std::min(std::find(it, data_end, '='), std::find(it, data_end, ':'));
+            if (seperator == end)
+                return false;
+
+            std::string key(it, seperator);
+            std::string value(seperator + 1, data_end);
+
+            struct ini_token token {
+                INI_TOKEN_ENTRY,
+                NULL,
+                key.c_str(),
+                value.c_str(),
+            };
+            f(token);
+            continue;
+        }
+
+        return false;
     }
 
-    int i=0;
-    for (auto it = target_hex.begin(); it != target_hex.end(); std::advance(it, 2)) {
+    struct ini_token token {
+        INI_TOKEN_DONE,
+        NULL,
+    };
+    f(token);
+
+    return true;
+}
+
+bool sha1sum_from_file(std::string& filename, std::vector<uint8_t>& result)
+{
+    if (result.capacity() != SHA_DIGEST_LENGTH)
+        return false;
+
+    // compute the sha1sum of the executable
+    std::ifstream file(filename, std::ios::binary);
+    std::vector<char> buffer(1024*1024, 0);
+    SHA_CTX sha;
+    if (SHA1_Init(&sha) != 1)
+        return false;
+
+    while(file.good()) {
+        file.read(buffer.data(), buffer.size());
+        std::streamsize size = file.gcount();
+        if (SHA1_Update(&sha, buffer.data(), size) != 1)
+            return false;
+    }
+
+    return SHA1_Final(result.data(), &sha) == 1;
+}
+
+bool sha1sum_from_hex(std::string& hex, std::vector<uint8_t>& result)
+{
+    if (hex.length() != SHA_DIGEST_LENGTH * 2)
+        return false;
+    if (result.capacity() != SHA_DIGEST_LENGTH)
+        return false;
+
+    size_t i = 0;
+    for(auto it = hex.begin(); it != hex.end(); std::advance(it, 2)) {
+        unsigned tmp;
         std::stringstream ss;
         ss << *it;
         ss << *(std::next(it));
-        unsigned tmp;
         ss >> std::hex >> tmp;
-        if (info->self_hash[i++] != static_cast<uint8_t>(tmp)) {
-            TRACE("skipping Entrypoints section. Not a match.");
-            return 1;
-        }
+        result[i++] = static_cast<uint8_t>(tmp);
     }
 
-    auto symbol = std::string(cname);
-    auto value = std::string(cvalue);
-    if (value.substr(0, 2) != "0x") {
-        ERR("symbol address is not a hex number");
-        std::abort();
-    }
-
-    unsigned int offset;
-    std::stringstream ss;
-    ss << std::hex << value.substr(2);
-    ss >> offset;
-
-    if (symbol == "SteamAPI_Init") {
-        TRACE("patching symbol SteamAPI_Init");
-        patch_entrypoint(reinterpret_cast<void *>(SteamAPI_Init), offset);
-    }
-    else {
-        ERR("unknown symbol " << symbol);
-        std::abort();
-    }
-
-    return 1;
+    return true;
 }
 
-__attribute__ ((constructor))
-static void init() {
-    std::ios_base::Init mInitializer;
-    TRACE("initializing");
+size_t from_hex(const std::string& str)
+{
+    size_t res;
+    std::stringstream ss;
+    ss << std::hex << str;
+    ss >> res;
+    return res;
+}
 
-    // lookup the executable and the directory of the exe
-    char *selfp = realpath("/proc/self/exe", NULL);
-    if (!selfp)
-        std::abort();
-    char *selfpc = strdup(selfp);
-    if (!selfpc)
-        std::abort();
-    char *dirp = dirname(selfpc);
-    auto dir = std::string(dirp);
-    auto self_exe = std::string(selfp);
-    free(selfp);
-    free(selfpc);
+template <typename Iter>
+std::string next_section(Iter& it, const Iter& end)
+{
+    auto sec_end = std::find(it, end, ' ');
+    std::string section(it, sec_end);
+    it = sec_end + 1;
+    while (it != end && *it == ' ') ++it;
+    return section;
+}
 
-    init_info info = {
-        .self_exe = self_exe,
-    };
-
-    std::string config_file;
-    if (std::getenv("FREESTEAMAPI_INI")) {
-        config_file = std::string(std::getenv("FREESTEAMAPI_INI"));
-    } else {
-        std::ifstream test1("./freesteamapi.ini");
-        if (test1.good()) {
-            config_file = std::string("./freesteamapi.ini");
-        } else {
-            std::ifstream test2(dir + "/freesteamapi.ini");
-            if (test2.good()) {
-                config_file = dir + "/freesteamapi.ini";
-            } else {
-                ERR("cannot find freesteamapi.ini");
-            }
-        }
-    }
-
-    INIReader reader(config_file);
-    if (reader.ParseError() < 0) {
-        ERR("cannot load config from " << config_file);
-        std::abort();
-    }
-
-    // lookup the execute map for self
-    int orig_prot = 0;
-    int new_prot = 0;
-    size_t start_addr;
-    size_t end_addr;
+template <typename Func>
+void memory_mappings(Func f)
+{
     std::ifstream maps("/proc/self/maps");
     std::string line;
     while (std::getline(maps, line)) {
-        size_t idx = 0;
-        size_t i;
+        auto it = line.begin();
+        auto end = line.end();
+        
+        auto mapping = next_section(it, end);
+        auto permissions = next_section(it, end);
+        next_section(it, end);
+        next_section(it, end);
+        next_section(it, end);
+        std::string name(it, end);
 
-        i = line.find(' ', idx);
-        std::string addrs = line.substr(idx, i-idx);
-        for (idx = i; line[idx] == ' '; idx++);
+        auto split = std::find(mapping.begin(), mapping.end(), '-');
+        auto mb = std::string(mapping.begin(), split);
+        auto me = std::string(split + 1, mapping.end());
+        size_t map_begin = from_hex(mb);
+        size_t map_end = from_hex(me);
 
-        i = line.find(' ', idx);
-        std::string perms = line.substr(idx, i-idx);
-        for (idx = i; line[idx] == ' '; idx++);
+        int prot = PROT_NONE;
+        if(permissions[0] == 'r') prot |= PROT_READ;
+        if(permissions[1] == 'w') prot |= PROT_WRITE;
+        if(permissions[2] == 'x') prot |= PROT_EXEC;
 
-        i = line.find(' ', idx);
-        for (idx = i; line[idx] == ' '; idx++);
+        if (!f(name, map_begin, map_end, prot))
+            return;
+    }
+}
 
-        i = line.find(' ', idx);
-        for (idx = i; line[idx] == ' '; idx++);
+class MakeMapWriteable {
+private:
+    size_t map_begin;
+    size_t map_end;
+    int permissions;
 
-        i = line.find(' ', idx);
-        for (idx = i; line[idx] == ' '; idx++);
+public:
+    MakeMapWriteable(std::string& map_name) {
+        size_t map_begin;
+        size_t map_end;
+        int permissions;
 
-        std::string fullpath = line.substr(idx);
-        if (fullpath == info.self_exe && perms[2] == 'x') {
-
-            size_t split = addrs.find("-");
-            std::stringstream ss;
-            ss << std::hex << addrs.substr(0, split);
-            ss >> start_addr;
-            std::stringstream ss2;
-            ss2 << std::hex << addrs.substr(split+1);
-            ss2 >> end_addr;
-
-            int orig_prot = PROT_NONE;
-            if(perms[0] == 'r') orig_prot |= PROT_READ;
-            if(perms[1] == 'w') orig_prot |= PROT_WRITE;
-            if(perms[2] == 'x') orig_prot |= PROT_EXEC;
-
-            if (!(orig_prot & PROT_WRITE)) {
-                TRACE("mprotect: make section writeable " << start_addr << " " << end_addr-start_addr);
-                new_prot = PROT_NONE;
-                new_prot |= PROT_READ;
-                new_prot |= PROT_WRITE;
-                if (mprotect(reinterpret_cast<void *>(start_addr), end_addr-start_addr, new_prot) != 0) {
-                    ERR("mprotect failed");
-                    std::abort();
-                }
+        memory_mappings([&](std::string& name, size_t begin, size_t end, int prot) -> bool {
+            if (map_name == name) {
+                map_begin = begin;
+                map_end = end;
+                permissions = prot;
+                return false;
             }
+            return true;
+        });
 
-            break;
-        }
-    }
-
-    // compute the sha1sum of the executable
-    std::ifstream self(info.self_exe, std::ios::binary);
-    std::vector<char> buffer(1024*1024, 0);
-    SHA_CTX sha;
-    if (SHA1_Init(&sha) != 1) {
-        ERR("cannot create hashsum of self");
-        std::abort();
-    }
-
-    while(self.good()) {
-        self.read(buffer.data(), buffer.size());
-        std::streamsize size = self.gcount();
-        if (SHA1_Update(&sha, buffer.data(), size) != 1) {
-            ERR("cannot update hashsum of self");
+        int new_prot = PROT_NONE;
+        new_prot |= PROT_READ;
+        new_prot |= PROT_WRITE;
+        if (mprotect(reinterpret_cast<void *>(map_begin), map_end-map_begin, new_prot) != 0) {
+            ERR("mprotect failed");
             std::abort();
         }
-    }
-    if (SHA1_Final(info.self_hash, &sha) != 1) {
-        ERR("cannot finalize hashsum of self");
-        std::abort();
-    }
 
-    // load the config file from the exe directory
-    TRACE("loadding freesteamapi.ini from \"" + config_file + "\"");
-
-    // special ini parsing for Entrypoint patching
-    if (ini_parse(config_file.c_str(), ini_handle, &info) != 0) {
-        ERR("cannot load config from " << config_file);
-        std::abort();
+        this->map_begin = map_begin;
+        this->map_end = map_end;
+        this->permissions = permissions;
     }
 
-    // undo mprotect changes
-    if (orig_prot != new_prot) {
-        TRACE("undo mprotect changes");
-        if (mprotect(reinterpret_cast<void *>(start_addr), end_addr-start_addr, orig_prot) != 0) {
+    ~MakeMapWriteable() {
+        size_t map_begin = this->map_begin;
+        size_t map_end = this->map_end;
+        int permissions = this->permissions;
+        if (mprotect(reinterpret_cast<void *>(map_begin), map_end-map_begin, permissions) != 0) {
             ERR("mprotect failed");
             std::abort();
         }
     }
+};
 
-    #define STEAMAPI_ENABLE_User
-    #define STEAMAPI_ENABLE_UserStats
-    #define STEAMAPI_ENABLE_Utils
-    #define STEAMAPI_ENABLE_UGC
-    #include "interface_loader.h"
+__attribute__ ((constructor))
+static void init() {
+    std::ios_base::Init init_io;
+    TRACE("initializing");
+
+    const char *config_env = std::getenv("FREESTEAMAPI_CONFIG");
+    auto config_file = config_env ? std::string(config_env) : std::string("./freesteamapi.ini");
+    std::ifstream config_stream(config_file);
+
+    enum {
+        STATE_NONE,
+        STATE_INTERFACE,
+        STATE_ENTRYPOINTS,
+    } state = STATE_NONE;
+
+    enum {
+        ENTRYP_NONE = 0,
+        ENTRYP_MATCHES = 1,
+        ENTRYP_FAILED = 2,
+        ENTRYP_CHECKED = ENTRYP_MATCHES | ENTRYP_FAILED,
+    } entryp_matches = ENTRYP_NONE;
+
+    auto self = std::string("/proc/self/exe");
+    std::vector<uint8_t> self_hash(SHA_DIGEST_LENGTH, 0);
+    sha1sum_from_file(self, self_hash);
+
+    bool success = parse_ini(config_stream, [&](struct ini_token& tok) {
+        if (tok.type == INI_TOKEN_SECTION) {
+            auto sec = std::string(tok.section);
+
+            if (sec == "Interfaces") {
+                state = STATE_INTERFACE;
+                return;
+            }
+            if (sec == "Entrypoints") {
+                state = STATE_ENTRYPOINTS;
+                entryp_matches = ENTRYP_NONE;
+                return;
+            }
+
+            ERR("unknown section " << sec);
+            std::abort();
+        }
+
+        if (tok.type == INI_TOKEN_ENTRY) {
+            auto key = std::string(tok.key);
+            auto value = std::string(tok.value);
+
+            if (state == STATE_INTERFACE) {
+                #define STEAMAPI_ENABLE_User
+                #define STEAMAPI_ENABLE_UserStats
+                #define STEAMAPI_ENABLE_Utils
+                #define STEAMAPI_ENABLE_UGC
+                #include "interface_loader.h"
+            }
+
+            if (state == STATE_ENTRYPOINTS) {
+                if (entryp_matches == ENTRYP_NONE) {
+                    if (key != "sha1sum") {
+                        ERR("Entrypoints requires sha1sum as first key");
+                        std::abort();
+                    }
+                    std::vector<uint8_t> target_hash(SHA_DIGEST_LENGTH, 0);
+                    sha1sum_from_hex(value, target_hash);
+                    if (std::equal(target_hash.begin(), target_hash.end(), self_hash.begin()))
+                        entryp_matches = ENTRYP_MATCHES;
+                    else
+                        entryp_matches = ENTRYP_FAILED;
+                    return;
+                }
+                if (entryp_matches == ENTRYP_MATCHES) {
+                    std::cout << "load entrypoint " << key << ":" << value << std::endl;
+                }
+            }
+        }
+    });
+    if (!success)
+        std::cout << "failed parsing" << std::endl;
+
+    MakeMapWriteable writeable();
+
+    std::abort();
 }
 
 

@@ -42,19 +42,17 @@ steam_api = steam_api_tree.getroot()
 
 with open(output_h, 'w') as o:
     for iface_name in iface_names:
-        o.write("if (reader.HasValue(\"Interfaces\", \"Steam" + iface_name + "\")) {\n")
-        o.write("    auto iface_version = reader.Get(\"Interfaces\", \"Steam" + iface_name + "\" , \"\");\n")
         o.write("#ifdef STEAMAPI_ENABLE_" + iface_name + "\n")
+        o.write("if (key == \"" + iface_name + "\") {\n")
         for iface in steam_api.findall("interface[@name='" + iface_name + "']"):
             iface_version = iface.get("version")
-            o.write("    if (iface_version == \"" + iface_version + "\") {\n")
+            o.write("    if (value == \"" + iface_version + "\") {\n")
             o.write("        sapi" + iface_name + " = reinterpret_cast<ISteam" + iface_name + " *>(new " + iface_name + "_" + iface_version + "());\n")
             o.write("        TRACE(\"loaded interface " + iface_version + "\");\n")
+            o.write("        return;\n")
             o.write("    }\n")
-        o.write("#endif\n")
-        o.write("    if (sapi" + iface_name + " == NULL) {\n")
-        o.write("        ERR(iface_version << \" not implemented\");\n")
-        o.write("        std::abort();\n")
-        o.write("    }\n")
+        o.write("    ERR(value << \" not implemented\");\n")
+        o.write("    std::abort();\n")
         o.write("}\n")
+        o.write("#endif\n")
 
