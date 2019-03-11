@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <map>
 #include <iterator>
 #include <algorithm>
 #include <libgen.h>
@@ -9,8 +10,6 @@
 #include <stdlib.h>
 #include <openssl/sha.h>
 #include <sys/mman.h>
-#include "../inih/cpp/INIReader.h"
-#include "../inih/ini.h"
 
 #include "steam_api.h"
 
@@ -166,6 +165,7 @@ STEAM_API HSteamUser GetHSteamUser()
 
 
 #if 0
+// all entrypoints
 SteamAPI_Init
 SteamAPI_Shutdown
 SteamAPI_ReleaseCurrentThreadMemory
@@ -303,6 +303,82 @@ static bool parse_ini(std::ifstream& stream, Func f)
     return true;
 }
 
+class Configuration {
+private:
+    std::vector<std::pair<std::string, std::map<std::string, std::string>>> mSections;
+
+public:
+    class Section {
+    private:
+        const std::string &mName;
+        const std::map<std::string, std::string> &mMap;
+    public:
+        Section(const std::string& n, const std::map<std::string, std::string>& m)
+          : mName(n), mMap(m) {}
+
+        const std::string& name() {
+            return mName;
+        }
+        const std::string& get(const std::string& key, const std::string& def) {
+            auto match = mMap.find(key);
+            if (match != mMap.end())
+                return (*match).second;
+            return def;
+        }
+        bool has(const std::string& key) {
+            return mMap.find(key) != mMap.end();
+        }
+    };
+
+    Configuration(std::ifstream& config_stream)
+    {
+        bool success = parse_ini(config_stream, [&](struct ini_token& tok) {
+            if (tok.type == INI_TOKEN_SECTION) {
+                mSections.push_back(std::make_pair(std::string(tok.section), std::map<std::string, std::string>()));
+                return;
+            }
+            if (tok.type == INI_TOKEN_ENTRY) {
+                std::map<std::string, std::string>& section = mSections.back().second;
+                section[std::string(tok.key)] = std::string(tok.value);
+            }
+        });
+        if (!success) {
+            ERR("configuration file is malformed");
+            std::abort();
+        }
+    }
+
+    Section section(const std::string& name) {
+        for (auto it = mSections.begin(); it != mSections.end(); ++it) {
+            const std::string& s_name = (*it).first;
+            std::map<std::string, std::string>& section = (*it).second;
+            if (name == s_name)
+                return Section(s_name, section);
+        }
+        ERR("section " << name << " not found");
+        std::abort();
+    }
+
+    bool has_section(const std::string& name) {
+        for (auto it = mSections.begin(); it != mSections.end(); ++it) {
+            const std::string& s_name = (*it).first;
+            if (name == s_name)
+                return true;
+        }
+        return false;
+    }
+
+    template<typename Func>
+    void sections(const std::string& name, Func f) {
+        for (auto it = mSections.begin(); it != mSections.end(); ++it) {
+            const std::string& s_name = (*it).first;
+            std::map<std::string, std::string>& section = (*it).second;
+            if (name == s_name)
+                f(Section(s_name, section));
+        }
+    }
+};
+
 static inline std::string executable_path() {
     char *selfp = realpath("/proc/self/exe", NULL);
     std::string self(selfp);
@@ -361,7 +437,10 @@ size_t from_hex(const std::string& str)
 {
     size_t res;
     std::stringstream ss;
-    ss << std::hex << str;
+    if (str.length() >= 2 && str[0] == '0' && str[1] == 'x')
+        ss << std::hex << str.substr(2);
+    else
+        ss << std::hex << str;
     ss >> res;
     return res;
 }
@@ -408,69 +487,50 @@ void memory_mappings(Func f)
     }
 }
 
-class MemoryMap {
-private:
-    size_t mBegin;
-    size_t mEnd;
-    int mProt;
-
-public:
-    MemoryMap(std::string& map_name) {
-        bool found = false;
-        memory_mappings([&](std::string& name, size_t begin, size_t end, int prot) -> bool {
-            if (map_name == name) {
-                mBegin = begin;
-                mEnd = end;
-                mProt = prot;
-                found = true;
-                return false;
-            }
-            return true;
-        });
-        if (!found) {
-            ERR("memory map not found");
-            std::abort();
-        }
-    }
-    ~MemoryMap() {}
-
-    size_t begin() {
-        return mBegin;
-    }
-
-    size_t end() {
-        return mEnd;
-    }
-
-    int prot() {
-        return mProt;
-    }
+struct MemoryMap {
+    MemoryMap() : begin(0), end(0), prot(0) {};
+    MemoryMap(size_t b, size_t e, int p)
+      : begin(b), end(e), prot(p) {};
+    size_t begin;
+    size_t end;
+    int prot;
 };
 
 class WriteableMemoryGuard {
 private:
-    MemoryMap &mMap;
+    MemoryMap mMap;
 
 public:
     WriteableMemoryGuard(MemoryMap &map) : mMap(map) {
+        if (mMap.begin == mMap.end)
+            return;
+
         int prot = PROT_NONE;
         prot |= PROT_READ;
         prot |= PROT_WRITE;
-        if (mprotect(reinterpret_cast<void *>(mMap.begin()), mMap.end() - mMap.begin(), prot) != 0) {
+        if (mprotect(reinterpret_cast<void *>(mMap.begin), mMap.end - mMap.begin, prot) != 0) {
             ERR("mprotect failed");
             std::abort();
         }
-        TRACE("make memory region " << mMap.begin() << "-" << mMap.end() << " writeable");
+        TRACE("make memory region " << mMap.begin << "-" << mMap.end << " writeable");
     }
 
     ~WriteableMemoryGuard() {
-        if (mprotect(reinterpret_cast<void *>(mMap.begin()), mMap.end() - mMap.begin(), mMap.prot()) != 0) {
+        if (mMap.begin == mMap.end)
+            return;
+
+        if (mprotect(reinterpret_cast<void *>(mMap.begin), mMap.end - mMap.begin, mMap.prot) != 0) {
             ERR("mprotect failed");
             std::abort();
         }
-        TRACE("restore permissions for memory region " << mMap.begin() << "-" << mMap.end());
+        TRACE("restore permissions for memory region " << mMap.begin << "-" << mMap.end);
     }
 };
+
+void patch_entrypoint(size_t target, size_t entrypoint)
+{
+    // FIXME
+}
 
 __attribute__ ((constructor))
 static void init() {
@@ -480,84 +540,44 @@ static void init() {
     const char *config_env = std::getenv("FREESTEAMAPI_CONFIG");
     auto config_file = config_env ? std::string(config_env) : std::string("./freesteamapi.ini");
     std::ifstream config_stream(config_file);
+    Configuration config(config_stream);
 
-    enum {
-        STATE_NONE,
-        STATE_INTERFACE,
-        STATE_ENTRYPOINTS,
-    } state = STATE_NONE;
-
-    enum {
-        ENTRYP_NONE = 0,
-        ENTRYP_MATCHES = 1,
-        ENTRYP_FAILED = 2,
-        ENTRYP_CHECKED = ENTRYP_MATCHES | ENTRYP_FAILED,
-    } entryp_matches = ENTRYP_NONE;
+    auto interfaces = config.section("Interfaces");
+    #define STEAMAPI_ENABLE_User
+    #define STEAMAPI_ENABLE_UserStats
+    #define STEAMAPI_ENABLE_Utils
+    #define STEAMAPI_ENABLE_UGC
+    #include "interface_loader.h"
 
     auto self = std::string("/proc/self/exe");
     std::vector<uint8_t> self_hash(SHA_DIGEST_LENGTH, 0);
     sha1sum_from_file(self, self_hash);
 
-    bool success = parse_ini(config_stream, [&](struct ini_token& tok) {
-        if (tok.type == INI_TOKEN_SECTION) {
-            auto sec = std::string(tok.section);
-
-            if (sec == "Interfaces") {
-                state = STATE_INTERFACE;
-                return;
-            }
-            if (sec == "Entrypoints") {
-                state = STATE_ENTRYPOINTS;
-                entryp_matches = ENTRYP_NONE;
-                return;
-            }
-
-            ERR("unknown section " << sec);
-            std::abort();
-        }
-
-        if (tok.type == INI_TOKEN_ENTRY) {
-            auto key = std::string(tok.key);
-            auto value = std::string(tok.value);
-
-            if (state == STATE_INTERFACE) {
-                #define STEAMAPI_ENABLE_User
-                #define STEAMAPI_ENABLE_UserStats
-                #define STEAMAPI_ENABLE_Utils
-                #define STEAMAPI_ENABLE_UGC
-                #include "interface_loader.h"
-            }
-
-            if (state == STATE_ENTRYPOINTS) {
-                if (entryp_matches == ENTRYP_NONE) {
-                    if (key != "sha1sum") {
-                        ERR("Entrypoints requires sha1sum as first key");
-                        std::abort();
-                    }
-                    std::vector<uint8_t> target_hash(SHA_DIGEST_LENGTH, 0);
-                    sha1sum_from_hex(value, target_hash);
-                    if (std::equal(target_hash.begin(), target_hash.end(), self_hash.begin()))
-                        entryp_matches = ENTRYP_MATCHES;
-                    else
-                        entryp_matches = ENTRYP_FAILED;
-                    return;
-                }
-                if (entryp_matches == ENTRYP_MATCHES) {
-                    std::cout << "load entrypoint " << key << ":" << value << std::endl;
-                }
-            }
-        }
-    });
-    if (!success)
-        std::cout << "failed parsing" << std::endl;
-
     auto exe_name = executable_path();
-    auto exe_map = MemoryMap(exe_name);
-    {
-        auto guard = WriteableMemoryGuard(exe_map);
-    }
+    MemoryMap map;
+    memory_mappings([&](std::string& name, size_t begin, size_t end, int prot) -> bool {
+        if (exe_name == name) {
+            map = MemoryMap(begin, end, prot);
+            return false;
+        }
+        return true;
+    });
 
+    config.sections("Entrypoints", [&](Configuration::Section section) {
+        auto sha1sum = section.get(std::string("sha1sum"), std::string(""));
+        std::vector<uint8_t> target_hash(SHA_DIGEST_LENGTH, 0);
+        sha1sum_from_hex(sha1sum, target_hash);
+        if (!std::equal(self_hash.begin(), self_hash.end(), target_hash.begin()))
+            return;
+
+        auto guard = WriteableMemoryGuard(map);
+        const std::string& sym_location = section.get(std::string("SteamAPI_Init"), std::string(""));
+        if (sym_location != "")
+            patch_entrypoint(reinterpret_cast<size_t>(SteamAPI_Init), from_hex(sym_location));
+        
+    });
+
+    // FIXME abort as long as patch_entrypoint is not implemented
     std::abort();
 }
-
 

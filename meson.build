@@ -38,10 +38,5 @@ steam_api_srcs = [
     'src/UGC.cc',
 ]
 
-inih_srcs = [
-    'inih/ini.c',
-    'inih/cpp/INIReader.cpp',
-]
-
-shared_library('steam_api', [steam_api_srcs, inih_srcs], dependencies : [openssl])
+shared_library('steam_api', [steam_api_srcs], dependencies : [openssl])
 
