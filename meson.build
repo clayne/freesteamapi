@@ -4,6 +4,8 @@ gen_types = find_program('gen/gen_types.py')
 gen_iface = find_program('gen/gen_iface.py')
 gen_iface_loader = find_program('gen/gen_iface_loader.py')
 
+openssl = dependency('openssl')
+
 steam_types = custom_target(
     'steam_types.h',
     output : 'steam_types.h',
@@ -41,5 +43,5 @@ inih_srcs = [
     'inih/cpp/INIReader.cpp',
 ]
 
-shared_library('steam_api', [steam_api_srcs, inih_srcs])
+shared_library('steam_api', [steam_api_srcs, inih_srcs], dependencies : [openssl])
 

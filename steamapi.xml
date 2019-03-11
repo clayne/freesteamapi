@@ -1326,29 +1326,6 @@
     <entry name="k_EItemStatistic_NumUniqueFollowers" value="5" />
     <entry name="k_EItemStatistic_NumUniqueWebsiteViews" value="6" />
     <entry name="k_EItemStatistic_ReportScore" value="7" />
-  </enum>
-  <enum id="EItemStatistic_v2" name="EItemStatistic" scope="UGC" since="STEAMUGC_INTERFACE_VERSION009">
-    <entry name="k_EItemStatistic_NumSubscriptions" value="0" />
-    <entry name="k_EItemStatistic_NumFavorites" value="1" />
-    <entry name="k_EItemStatistic_NumFollowers" value="2" />
-    <entry name="k_EItemStatistic_NumUniqueSubscriptions" value="3" />
-    <entry name="k_EItemStatistic_NumUniqueFavorites" value="4" />
-    <entry name="k_EItemStatistic_NumUniqueFollowers" value="5" />
-    <entry name="k_EItemStatistic_NumUniqueWebsiteViews" value="6" />
-    <entry name="k_EItemStatistic_ReportScore" value="7" />
-    <entry name="k_EItemStatistic_NumSecondsPlayed" value="8" />
-    <entry name="k_EItemStatistic_NumPlaytimeSessions" value="9" />
-    <entry name="k_EItemStatistic_NumComments" value="10" />
-  </enum>
-  <enum id="EItemStatistic_v3" name="EItemStatistic" scope="UGC" since="STEAMUGC_INTERFACE_VERSION010">
-    <entry name="k_EItemStatistic_NumSubscriptions" value="0" />
-    <entry name="k_EItemStatistic_NumFavorites" value="1" />
-    <entry name="k_EItemStatistic_NumFollowers" value="2" />
-    <entry name="k_EItemStatistic_NumUniqueSubscriptions" value="3" />
-    <entry name="k_EItemStatistic_NumUniqueFavorites" value="4" />
-    <entry name="k_EItemStatistic_NumUniqueFollowers" value="5" />
-    <entry name="k_EItemStatistic_NumUniqueWebsiteViews" value="6" />
-    <entry name="k_EItemStatistic_ReportScore" value="7" />
     <entry name="k_EItemStatistic_NumSecondsPlayed" value="8" />
     <entry name="k_EItemStatistic_NumPlaytimeSessions" value="9" />
     <entry name="k_EItemStatistic_NumComments" value="10" />
@@ -1531,11 +1508,6 @@
     <entry name="k_EResolveConflictKeepServer" value="2" />
   </enum>
   <enum id="ELeaderboardDataRequest_v1" name="ELeaderboardDataRequest" scope="UserStats" since="STEAMUSERSTATS_INTERFACE_VERSION005">
-    <entry name="k_ELeaderboardDataRequestGlobal" value="0" />
-    <entry name="k_ELeaderboardDataRequestGlobalAroundUser" value="1" />
-    <entry name="k_ELeaderboardDataRequestFriends" value="2" />
-  </enum>
-  <enum id="ELeaderboardDataRequest_v2" name="ELeaderboardDataRequest" scope="UserStats" since="STEAMUSERSTATS_INTERFACE_VERSION009">
     <entry name="k_ELeaderboardDataRequestGlobal" value="0" />
     <entry name="k_ELeaderboardDataRequestGlobalAroundUser" value="1" />
     <entry name="k_ELeaderboardDataRequestFriends" value="2" />
@@ -1740,20 +1712,6 @@
     <entry name="k_EGCResultInvalidMessage" value="4" />
   </enum>
   <enum id="EUGCMatchingUGCType_v1" name="EUGCMatchingUGCType" scope="UGC" since="STEAMUGC_INTERFACE_VERSION001">
-    <entry name="k_EUGCMatchingUGCType_Items" value="0" />
-    <entry name="k_EUGCMatchingUGCType_Items_Mtx" value="1" />
-    <entry name="k_EUGCMatchingUGCType_Items_ReadyToUse" value="2" />
-    <entry name="k_EUGCMatchingUGCType_Collections" value="3" />
-    <entry name="k_EUGCMatchingUGCType_Artwork" value="4" />
-    <entry name="k_EUGCMatchingUGCType_Videos" value="5" />
-    <entry name="k_EUGCMatchingUGCType_Screenshots" value="6" />
-    <entry name="k_EUGCMatchingUGCType_AllGuides" value="7" />
-    <entry name="k_EUGCMatchingUGCType_WebGuides" value="8" />
-    <entry name="k_EUGCMatchingUGCType_IntegratedGuides" value="9" />
-    <entry name="k_EUGCMatchingUGCType_UsableInGame" value="10" />
-    <entry name="k_EUGCMatchingUGCType_ControllerBindings" value="11" />
-  </enum>
-  <enum id="EUGCMatchingUGCType_v2" name="EUGCMatchingUGCType" scope="UGC" since="STEAMUGC_INTERFACE_VERSION007">
     <entry name="k_EUGCMatchingUGCType_Items" value="0" />
     <entry name="k_EUGCMatchingUGCType_Items_Mtx" value="1" />
     <entry name="k_EUGCMatchingUGCType_Items_ReadyToUse" value="2" />
@@ -2288,21 +2246,6 @@
     <entry name="k_EItemQuality_Count" value="4" />
   </enum>
   <enum id="EUGCQuery_v1" name="EUGCQuery" scope="UGC" since="STEAMUGC_INTERFACE_VERSION003">
-    <entry name="k_EUGCQuery_RankedByVote" value="0" />
-    <entry name="k_EUGCQuery_RankedByPublicationDate" value="1" />
-    <entry name="k_EUGCQuery_AcceptedForGameRankedByAcceptanceDate" value="2" />
-    <entry name="k_EUGCQuery_RankedByTrend" value="3" />
-    <entry name="k_EUGCQuery_FavoritedByFriendsRankedByPublicationDate" value="4" />
-    <entry name="k_EUGCQuery_CreatedByFriendsRankedByPublicationDate" value="5" />
-    <entry name="k_EUGCQuery_RankedByNumTimesReported" value="6" />
-    <entry name="k_EUGCQuery_CreatedByFollowedUsersRankedByPublicationDate" value="7" />
-    <entry name="k_EUGCQuery_NotYetRated" value="8" />
-    <entry name="k_EUGCQuery_RankedByTotalVotesAsc" value="9" />
-    <entry name="k_EUGCQuery_RankedByVotesUp" value="10" />
-    <entry name="k_EUGCQuery_RankedByTextSearch" value="11" />
-    <entry name="k_EUGCQuery_RankedByTotalUniqueSubscriptions" value="12" />
-  </enum>
-  <enum id="EUGCQuery_v2" name="EUGCQuery" scope="UGC" since="STEAMUGC_INTERFACE_VERSION009">
     <entry name="k_EUGCQuery_RankedByVote" value="0" />
     <entry name="k_EUGCQuery_RankedByPublicationDate" value="1" />
     <entry name="k_EUGCQuery_AcceptedForGameRankedByAcceptanceDate" value="2" />
@@ -4814,7 +4757,7 @@
   </interface>
   <interface name="UGC" id="UGC_v7" version="STEAMUGC_INTERFACE_VERSION009">
     <method id="UGC::CreateQueryUserUGCRequest_v2" />
-    <method id="UGC::CreateQueryAllUGCRequest_v3" />
+    <method id="UGC::CreateQueryAllUGCRequest_v2" />
     <method id="UGC::CreateQueryUGCDetailsRequest_v1" />
     <method id="UGC::SendQueryUGCRequest_v1" />
     <method id="UGC::GetQueryUGCResult_v1" />
@@ -4883,14 +4826,14 @@
   </interface>
   <interface name="UGC" id="UGC_v8" version="STEAMUGC_INTERFACE_VERSION010">
     <method id="UGC::CreateQueryUserUGCRequest_v2" />
-    <method id="UGC::CreateQueryAllUGCRequest_v3" />
+    <method id="UGC::CreateQueryAllUGCRequest_v2" />
     <method id="UGC::CreateQueryUGCDetailsRequest_v1" />
     <method id="UGC::SendQueryUGCRequest_v1" />
     <method id="UGC::GetQueryUGCResult_v1" />
     <method id="UGC::GetQueryUGCPreviewURL_v1" />
     <method id="UGC::GetQueryUGCMetadata_v1" />
     <method id="UGC::GetQueryUGCChildren_v1" />
-    <method id="UGC::GetQueryUGCStatistic_v3" />
+    <method id="UGC::GetQueryUGCStatistic_v2" />
     <method id="UGC::GetQueryUGCNumAdditionalPreviews_v1" />
     <method id="UGC::GetQueryUGCAdditionalPreview_v2" />
     <method id="UGC::GetQueryUGCNumKeyValueTags_v1" />
@@ -7509,15 +7452,7 @@
   <method name="CreateQueryAllUGCRequest" id="UGC::CreateQueryAllUGCRequest_v2">
     <return>UGCQueryHandle_t</return>
     <param><type ref-id="EUGCQuery_v1">EUGCQuery</type> <name>eQueryType</name></param>
-    <param><type ref-id="EUGCMatchingUGCType_v2">EUGCMatchingUGCType</type> <name>eMatchingeMatchingUGCTypeFileType</name></param>
-    <param><type>AppId_t</type> <name>nCreatorAppID</name></param>
-    <param><type>AppId_t</type> <name>nConsumerAppID</name></param>
-    <param><type>uint32</type> <name>unPage</name></param>
-  </method>
-  <method name="CreateQueryAllUGCRequest" id="UGC::CreateQueryAllUGCRequest_v3">
-    <return>UGCQueryHandle_t</return>
-    <param><type ref-id="EUGCQuery_v2">EUGCQuery</type> <name>eQueryType</name></param>
-    <param><type ref-id="EUGCMatchingUGCType_v2">EUGCMatchingUGCType</type> <name>eMatchingeMatchingUGCTypeFileType</name></param>
+    <param><type ref-id="EUGCMatchingUGCType_v1">EUGCMatchingUGCType</type> <name>eMatchingeMatchingUGCTypeFileType</name></param>
     <param><type>AppId_t</type> <name>nCreatorAppID</name></param>
     <param><type>AppId_t</type> <name>nConsumerAppID</name></param>
     <param><type>uint32</type> <name>unPage</name></param>
@@ -7894,14 +7829,7 @@
     <return>bool</return>
     <param><type>UGCQueryHandle_t</type> <name>handle</name></param>
     <param><type>uint32</type> <name>index</name></param>
-    <param><type ref-id="EItemStatistic_v2">EItemStatistic</type> <name>eStatType</name></param>
-    <param dir="out" fixed-size="1"><type>uint64</type>* <name>pStatValue</name></param>
-  </method>
-  <method name="GetQueryUGCStatistic" id="UGC::GetQueryUGCStatistic_v3">
-    <return>bool</return>
-    <param><type>UGCQueryHandle_t</type> <name>handle</name></param>
-    <param><type>uint32</type> <name>index</name></param>
-    <param><type ref-id="EItemStatistic_v3">EItemStatistic</type> <name>eStatType</name></param>
+    <param><type ref-id="EItemStatistic_v1">EItemStatistic</type> <name>eStatType</name></param>
     <param dir="out" fixed-size="1"><type>uint64</type>* <name>pStatValue</name></param>
   </method>
   <method name="GetNextOutgoingPacket" id="MasterServerUpdater::GetNextOutgoingPacket_v1">
@@ -10122,7 +10050,7 @@
     <return>UGCQueryHandle_t</return>
     <param><type>AccountID_t</type> <name>unAccountID</name></param>
     <param><type ref-id="EUserUGCList_v1">EUserUGCList</type> <name>eListType</name></param>
-    <param><type ref-id="EUGCMatchingUGCType_v2">EUGCMatchingUGCType</type> <name>eMatchingUGCType</name></param>
+    <param><type ref-id="EUGCMatchingUGCType_v1">EUGCMatchingUGCType</type> <name>eMatchingUGCType</name></param>
     <param><type ref-id="EUserUGCListSortOrder_v1">EUserUGCListSortOrder</type> <name>eSortOrder</name></param>
     <param><type>AppId_t</type> <name>nCreatorAppID</name></param>
     <param><type>AppId_t</type> <name>nConsumerAppID</name></param>
@@ -10477,7 +10405,7 @@
   <method name="DownloadLeaderboardEntries" id="UserStats::DownloadLeaderboardEntries_v2" call-result="LeaderboardScoresDownloaded_t">
     <return>SteamAPICall_t</return>
     <param><type>SteamLeaderboard_t</type> <name>hSteamLeaderboard</name></param>
-    <param><type ref-id="ELeaderboardDataRequest_v2">ELeaderboardDataRequest</type> <name>eLeaderboardDataRequest</name></param>
+    <param><type ref-id="ELeaderboardDataRequest_v1">ELeaderboardDataRequest</type> <name>eLeaderboardDataRequest</name></param>
     <param><type>int</type> <name>nRangeStart</name></param>
     <param><type>int</type> <name>nRangeEnd</name></param>
   </method>
