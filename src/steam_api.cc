@@ -303,6 +303,18 @@ static bool parse_ini(std::ifstream& stream, Func f)
     return true;
 }
 
+static inline std::string executable_path() {
+    char *selfp = realpath("/proc/self/exe", NULL);
+    std::string self(selfp);
+    free(selfp);
+    return self;
+}
+
+static inline std::string executable_name() {
+    auto self = executable_path();
+    return std::string(std::find(self.rbegin(), self.rend(), '/').base(), self.end());
+}
+
 bool sha1sum_from_file(std::string& filename, std::vector<uint8_t>& result)
 {
     if (result.capacity() != SHA_DIGEST_LENGTH)
@@ -396,49 +408,67 @@ void memory_mappings(Func f)
     }
 }
 
-class MakeMapWriteable {
+class MemoryMap {
 private:
-    size_t map_begin;
-    size_t map_end;
-    int permissions;
+    size_t mBegin;
+    size_t mEnd;
+    int mProt;
 
 public:
-    MakeMapWriteable(std::string& map_name) {
-        size_t map_begin;
-        size_t map_end;
-        int permissions;
-
+    MemoryMap(std::string& map_name) {
+        bool found = false;
         memory_mappings([&](std::string& name, size_t begin, size_t end, int prot) -> bool {
             if (map_name == name) {
-                map_begin = begin;
-                map_end = end;
-                permissions = prot;
+                mBegin = begin;
+                mEnd = end;
+                mProt = prot;
+                found = true;
                 return false;
             }
             return true;
         });
-
-        int new_prot = PROT_NONE;
-        new_prot |= PROT_READ;
-        new_prot |= PROT_WRITE;
-        if (mprotect(reinterpret_cast<void *>(map_begin), map_end-map_begin, new_prot) != 0) {
-            ERR("mprotect failed");
+        if (!found) {
+            ERR("memory map not found");
             std::abort();
         }
+    }
+    ~MemoryMap() {}
 
-        this->map_begin = map_begin;
-        this->map_end = map_end;
-        this->permissions = permissions;
+    size_t begin() {
+        return mBegin;
     }
 
-    ~MakeMapWriteable() {
-        size_t map_begin = this->map_begin;
-        size_t map_end = this->map_end;
-        int permissions = this->permissions;
-        if (mprotect(reinterpret_cast<void *>(map_begin), map_end-map_begin, permissions) != 0) {
+    size_t end() {
+        return mEnd;
+    }
+
+    int prot() {
+        return mProt;
+    }
+};
+
+class WriteableMemoryGuard {
+private:
+    MemoryMap &mMap;
+
+public:
+    WriteableMemoryGuard(MemoryMap &map) : mMap(map) {
+        int prot = PROT_NONE;
+        prot |= PROT_READ;
+        prot |= PROT_WRITE;
+        if (mprotect(reinterpret_cast<void *>(mMap.begin()), mMap.end() - mMap.begin(), prot) != 0) {
             ERR("mprotect failed");
             std::abort();
         }
+        TRACE("make memory region " << mMap.begin() << "-" << mMap.end() << " writeable");
+    }
+
+    ~WriteableMemoryGuard() {
+        if (mprotect(reinterpret_cast<void *>(mMap.begin()), mMap.end() - mMap.begin(), mMap.prot()) != 0) {
+            ERR("mprotect failed");
+            std::abort();
+        }
+        TRACE("restore permissions for memory region " << mMap.begin() << "-" << mMap.end());
     }
 };
 
@@ -521,7 +551,11 @@ static void init() {
     if (!success)
         std::cout << "failed parsing" << std::endl;
 
-    MakeMapWriteable writeable();
+    auto exe_name = executable_path();
+    auto exe_map = MemoryMap(exe_name);
+    {
+        auto guard = WriteableMemoryGuard(exe_map);
+    }
 
     std::abort();
 }
