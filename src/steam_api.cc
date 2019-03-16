@@ -53,8 +53,7 @@ ENTRYPOINT(ParentalSettings);
 
 STEAM_API bool SteamAPI_Init()
 {
-    std::abort();
-    return true;
+    return false;
 }
 
 STEAM_API void SteamAPI_Shutdown()
@@ -563,6 +562,7 @@ void patch_entrypoint(size_t target_loc, size_t entrypoint_loc, size_t scratch_l
     scratch_code[10] = 0xff;
     scratch_code[11] = 0xe0;
 
+    std::cout << "entrypoint_loc " << entrypoint_loc << std::endl;
     uint8_t *patch = reinterpret_cast<uint8_t *>(entrypoint_loc);
     patch[0] = 0xb8;
     patch[1] = static_cast<uint8_t>(scratch_loc);
@@ -584,10 +584,31 @@ static void init() {
     Configuration config(config_stream);
 
     auto interfaces = config.section("Interfaces");
+    #define STEAMAPI_ENABLE_Apps
+    #define STEAMAPI_ENABLE_AppList
+    #define STEAMAPI_ENABLE_Client
+    #define STEAMAPI_ENABLE_Controller
+    #define STEAMAPI_ENABLE_Friends
+    #define STEAMAPI_ENABLE_HTMLSurface
+    #define STEAMAPI_ENABLE_HTTP
+    #define STEAMAPI_ENABLE_Inventory
+    #define STEAMAPI_ENABLE_Matchmaking
+// FIXME    #define STEAMAPI_ENABLE_MatchmakingServers
+    #define STEAMAPI_ENABLE_Music
+    #define STEAMAPI_ENABLE_MusicRemote
+    #define STEAMAPI_ENABLE_Networking
+    #define STEAMAPI_ENABLE_RemoteStorage
+    #define STEAMAPI_ENABLE_Screenshots
     #define STEAMAPI_ENABLE_User
     #define STEAMAPI_ENABLE_UserStats
     #define STEAMAPI_ENABLE_Utils
     #define STEAMAPI_ENABLE_UGC
+    #define STEAMAPI_ENABLE_Video
+    #define STEAMAPI_ENABLE_AppTicket
+    #define STEAMAPI_ENABLE_GameServer
+    #define STEAMAPI_ENABLE_GameServerStats
+    #define STEAMAPI_ENABLE_GameCoordinator
+    #define STEAMAPI_ENABLE_ParentalSettings
     #include "interface_loader.h"
 
     auto self = std::string("/proc/self/exe");

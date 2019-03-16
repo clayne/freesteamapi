@@ -1966,48 +1966,6 @@
     <entry name="k_EControllerActionOrigin_Gyro_Pitch" value="36" />
     <entry name="k_EControllerActionOrigin_Gyro_Yaw" value="37" />
     <entry name="k_EControllerActionOrigin_Gyro_Roll" value="38" />
-    <entry name="k_EControllerActionOrigin_Count" value="39" />
-  </enum>
-  <enum id="EControllerActionOrigin_v2" name="EControllerActionOrigin" scope="Controller" since="SteamController005">
-    <entry name="k_EControllerActionOrigin_None" value="0" />
-    <entry name="k_EControllerActionOrigin_A" value="1" />
-    <entry name="k_EControllerActionOrigin_B" value="2" />
-    <entry name="k_EControllerActionOrigin_X" value="3" />
-    <entry name="k_EControllerActionOrigin_Y" value="4" />
-    <entry name="k_EControllerActionOrigin_LeftBumper" value="5" />
-    <entry name="k_EControllerActionOrigin_RightBumper" value="6" />
-    <entry name="k_EControllerActionOrigin_LeftGrip" value="7" />
-    <entry name="k_EControllerActionOrigin_RightGrip" value="8" />
-    <entry name="k_EControllerActionOrigin_Start" value="9" />
-    <entry name="k_EControllerActionOrigin_Back" value="10" />
-    <entry name="k_EControllerActionOrigin_LeftPad_Touch" value="11" />
-    <entry name="k_EControllerActionOrigin_LeftPad_Swipe" value="12" />
-    <entry name="k_EControllerActionOrigin_LeftPad_Click" value="13" />
-    <entry name="k_EControllerActionOrigin_LeftPad_DPadNorth" value="14" />
-    <entry name="k_EControllerActionOrigin_LeftPad_DPadSouth" value="15" />
-    <entry name="k_EControllerActionOrigin_LeftPad_DPadWest" value="16" />
-    <entry name="k_EControllerActionOrigin_LeftPad_DPadEast" value="17" />
-    <entry name="k_EControllerActionOrigin_RightPad_Touch" value="18" />
-    <entry name="k_EControllerActionOrigin_RightPad_Swipe" value="19" />
-    <entry name="k_EControllerActionOrigin_RightPad_Click" value="20" />
-    <entry name="k_EControllerActionOrigin_RightPad_DPadNorth" value="21" />
-    <entry name="k_EControllerActionOrigin_RightPad_DPadSouth" value="22" />
-    <entry name="k_EControllerActionOrigin_RightPad_DPadWest" value="23" />
-    <entry name="k_EControllerActionOrigin_RightPad_DPadEast" value="24" />
-    <entry name="k_EControllerActionOrigin_LeftTrigger_Pull" value="25" />
-    <entry name="k_EControllerActionOrigin_LeftTrigger_Click" value="26" />
-    <entry name="k_EControllerActionOrigin_RightTrigger_Pull" value="27" />
-    <entry name="k_EControllerActionOrigin_RightTrigger_Click" value="28" />
-    <entry name="k_EControllerActionOrigin_LeftStick_Move" value="29" />
-    <entry name="k_EControllerActionOrigin_LeftStick_Click" value="30" />
-    <entry name="k_EControllerActionOrigin_LeftStick_DPadNorth" value="31" />
-    <entry name="k_EControllerActionOrigin_LeftStick_DPadSouth" value="32" />
-    <entry name="k_EControllerActionOrigin_LeftStick_DPadWest" value="33" />
-    <entry name="k_EControllerActionOrigin_LeftStick_DPadEast" value="34" />
-    <entry name="k_EControllerActionOrigin_Gyro_Move" value="35" />
-    <entry name="k_EControllerActionOrigin_Gyro_Pitch" value="36" />
-    <entry name="k_EControllerActionOrigin_Gyro_Yaw" value="37" />
-    <entry name="k_EControllerActionOrigin_Gyro_Roll" value="38" />
     <entry name="k_EControllerActionOrigin_PS4_X" value="39" />
     <entry name="k_EControllerActionOrigin_PS4_Circle" value="40" />
     <entry name="k_EControllerActionOrigin_PS4_Triangle" value="41" />
@@ -4962,10 +4920,10 @@
     <method id="Controller::GetCurrentActionSet_v1" />
     <method id="Controller::GetDigitalActionHandle_v1" />
     <method id="Controller::GetDigitalActionData_v1" />
-    <method id="Controller::GetDigitalActionOrigins_v2" />
+    <method id="Controller::GetDigitalActionOrigins_v1" />
     <method id="Controller::GetAnalogActionHandle_v1" />
     <method id="Controller::GetAnalogActionData_v1" />
-    <method id="Controller::GetAnalogActionOrigins_v2" />
+    <method id="Controller::GetAnalogActionOrigins_v1" />
     <method id="Controller::StopAnalogActionMomentum_v1" />
     <method id="Controller::TriggerHapticPulse_v2" />
     <method id="Controller::TriggerRepeatedHapticPulse_v1" />
@@ -4994,10 +4952,10 @@
     <method id="Controller::GetActiveActionSetLayers_v1" />
     <method id="Controller::GetDigitalActionHandle_v1" />
     <method id="Controller::GetDigitalActionData_v1" />
-    <method id="Controller::GetDigitalActionOrigins_v2" />
+    <method id="Controller::GetDigitalActionOrigins_v1" />
     <method id="Controller::GetAnalogActionHandle_v1" />
     <method id="Controller::GetAnalogActionData_v1" />
-    <method id="Controller::GetAnalogActionOrigins_v2" />
+    <method id="Controller::GetAnalogActionOrigins_v1" />
     <method id="Controller::StopAnalogActionMomentum_v1" />
     <method id="Controller::TriggerHapticPulse_v2" />
     <method id="Controller::TriggerRepeatedHapticPulse_v1" />
@@ -8644,13 +8602,6 @@
     <param><type>ControllerAnalogActionHandle_t</type> <name>analogActionHandle</name></param>
     <param dir="out" fixed-size="1"><type ref-id="EControllerActionOrigin_v1">EControllerActionOrigin</type>* <name>originsOut</name></param>
   </method>
-  <method name="GetAnalogActionOrigins" id="Controller::GetAnalogActionOrigins_v2">
-    <return>int</return>
-    <param><type>ControllerHandle_t</type> <name>controllerHandle</name></param>
-    <param><type>ControllerActionSetHandle_t</type> <name>actionSetHandle</name></param>
-    <param><type>ControllerAnalogActionHandle_t</type> <name>analogActionHandle</name></param>
-    <param dir="out" fixed-size="1"><type ref-id="EControllerActionOrigin_v2">EControllerActionOrigin</type>* <name>originsOut</name></param>
-  </method>
   <method name="RefreshSteam2Login" id="User::RefreshSteam2Login_v1">
     <return>void</return>
   </method>
@@ -9167,13 +9118,6 @@
     <param><type>ControllerActionSetHandle_t</type> <name>actionSetHandle</name></param>
     <param><type>ControllerDigitalActionHandle_t</type> <name>digitalActionHandle</name></param>
     <param dir="out" fixed-size="1"><type ref-id="EControllerActionOrigin_v1">EControllerActionOrigin</type>* <name>originsOut</name></param>
-  </method>
-  <method name="GetDigitalActionOrigins" id="Controller::GetDigitalActionOrigins_v2">
-    <return>int</return>
-    <param><type>ControllerHandle_t</type> <name>controllerHandle</name></param>
-    <param><type>ControllerActionSetHandle_t</type> <name>actionSetHandle</name></param>
-    <param><type>ControllerDigitalActionHandle_t</type> <name>digitalActionHandle</name></param>
-    <param dir="out" fixed-size="1"><type ref-id="EControllerActionOrigin_v2">EControllerActionOrigin</type>* <name>originsOut</name></param>
   </method>
   <method name="RequestSpectatorServerList" id="MatchmakingServers::RequestSpectatorServerList_v1">
     <return>void</return>
@@ -9739,7 +9683,7 @@
   </method>
   <method name="GetGlyphForActionOrigin" id="Controller::GetGlyphForActionOrigin_v1">
     <return>const char *</return>
-    <param><type ref-id="EControllerActionOrigin_v2">EControllerActionOrigin</type> <name>eOrigin</name></param>
+    <param><type ref-id="EControllerActionOrigin_v1">EControllerActionOrigin</type> <name>eOrigin</name></param>
   </method>
   <method name="RequestFriendRichPresence" id="Friends::RequestFriendRichPresence_v1" call-fires="FriendRichPresenceUpdate_t">
     <return>void</return>
@@ -11087,7 +11031,7 @@
   </method>
   <method name="GetStringForActionOrigin" id="Controller::GetStringForActionOrigin_v1">
     <return>const char *</return>
-    <param><type ref-id="EControllerActionOrigin_v2">EControllerActionOrigin</type> <name>eOrigin</name></param>
+    <param><type ref-id="EControllerActionOrigin_v1">EControllerActionOrigin</type> <name>eOrigin</name></param>
   </method>
   <method name="SetCurrentPlaylistEntry" id="MusicRemote::SetCurrentPlaylistEntry_v1">
     <return>bool</return>
