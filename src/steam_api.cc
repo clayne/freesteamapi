@@ -164,59 +164,6 @@ STEAM_API HSteamUser GetHSteamUser()
     return 0;
 }
 
-
-
-
-#if 0
-// all entrypoints
-SteamAPI_Init
-SteamAPI_Shutdown
-SteamAPI_ReleaseCurrentThreadMemory
-SteamAPI_RestartAppIfNecessary
-SteamAPI_SetMiniDumpComment
-SteamAPI_WriteMiniDump
-SteamAPI_RunCallbacks
-SteamAPI_RegisterCallback
-SteamAPI_UnregisterCallback
-SteamAPI_RegisterCallResult
-SteamAPI_UnregisterCallResult
-SteamAPI_IsSteamRunning
-Steam_RunCallbacks
-Steam_RegisterInterfaceFuncs
-Steam_GetHSteamUserCurrent
-SteamAPI_GetSteamInstallPath
-SteamAPI_GetHSteamPipe
-SteamAPI_SetTryCatchCallbacks
-SteamAPI_InitSafe
-GetHSteamPipe
-GetHSteamUser
-ISteamApps
-ISteamAppList
-ISteamClient
-ISteamController
-ISteamFriends
-ISteamHTMLSurface
-ISteamHTTP
-ISteamInventory
-ISteamMatchmaking
-ISteamMatchmakingServers
-ISteamMusic
-ISteamMusicRemote
-ISteamNetworking
-ISteamRemoteStorage
-ISteamScreenshots
-ISteamUGC
-ISteamUser
-ISteamUserStats
-ISteamUtils
-ISteamVideo
-ISteamAppTicket
-ISteamGameServer
-ISteamGameServerStats
-ISteamGameCoordinator
-ISteamParentalSettings
-#endif
-
 enum ini_token_type {
     INI_TOKEN_SECTION,
     INI_TOKEN_ENTRY,
@@ -530,7 +477,37 @@ public:
     }
 };
 
-void patch_entrypoint(size_t target_loc, size_t entrypoint_loc, size_t scratch_loc)
+class ScratchBuffer {
+private:
+    MemoryMap mScratchBuf;
+    size_t mOffset;
+public:
+    ScratchBuffer() : mScratchBuf(0x2a000000, 0x2a000000 + 1024*1024, PROT_EXEC|PROT_READ), mOffset(0) {
+        size_t res = reinterpret_cast<size_t>(mmap(reinterpret_cast<void *>(mScratchBuf.begin), mScratchBuf.end - mScratchBuf.begin, mScratchBuf.prot, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));
+        assert(res == mScratchBuf.begin);
+    }
+    ~ScratchBuffer() {
+        munmap(reinterpret_cast<void *>(mScratchBuf.begin), mScratchBuf.end - mScratchBuf.begin);
+    }
+
+    WriteableMemoryGuard make_writeable() {
+        return WriteableMemoryGuard(mScratchBuf);
+    }
+
+    size_t write(std::vector<uint8_t>& data) {
+        assert(mOffset + data.size() < mScratchBuf.end - mScratchBuf.begin);
+        uint8_t *p = reinterpret_cast<uint8_t *>(mScratchBuf.begin + mOffset);
+        for (auto it = data.begin(); it != data.end(); ++it) {
+            *p = *it;
+            p++;
+        }
+        auto res = mOffset;
+        mOffset += data.size();
+        return res;
+    }
+};
+
+void patch_entrypoint(size_t target_loc, size_t entrypoint_loc, ScratchBuffer& scratch_buf)
 {
     // patching by overwriting the first 7 bytes of entrypoint
     // We cannot use more than 7 bytes because that's the length of some
@@ -545,10 +522,8 @@ void patch_entrypoint(size_t target_loc, size_t entrypoint_loc, size_t scratch_l
     //  48b8eeeeeeeeccccccccffe0
     //
 
-    assert(scratch_loc < 0xffffffff);
-
     // FIXME this only works for one symbol because we always overwrite
-    uint8_t *scratch_code = reinterpret_cast<uint8_t *>(scratch_loc);
+    auto scratch_code = std::vector<uint8_t>(12);
     scratch_code[0] = 0x48;
     scratch_code[1] = 0xb8;
     scratch_code[2] = static_cast<uint8_t>(target_loc);
@@ -561,8 +536,8 @@ void patch_entrypoint(size_t target_loc, size_t entrypoint_loc, size_t scratch_l
     scratch_code[9] = static_cast<uint8_t>(target_loc >> 56);
     scratch_code[10] = 0xff;
     scratch_code[11] = 0xe0;
+    size_t scratch_loc = scratch_buf.write(scratch_code);
 
-    std::cout << "entrypoint_loc " << entrypoint_loc << std::endl;
     uint8_t *patch = reinterpret_cast<uint8_t *>(entrypoint_loc);
     patch[0] = 0xb8;
     patch[1] = static_cast<uint8_t>(scratch_loc);
@@ -632,26 +607,10 @@ static void init() {
         if (!std::equal(self_hash.begin(), self_hash.end(), target_hash.begin()))
             return;
 
-        // sha1sum matches
-        // do the entrypoint patching!
-        // we might need scratch memory to put some code into in the lower
-
-        // 32 bit address range
-        // FIXME handle the case that there already is something mapped at the specific address
-        //       and choose new address
-        void *scratch_buf = mmap(reinterpret_cast<void *>(0x2a000000), 1024*1024, PROT_EXEC|PROT_READ, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
-        size_t scratch_loc = reinterpret_cast<size_t>(scratch_buf);
-        assert(scratch_loc == 0x2a000000);
-        MemoryMap scratch_map(scratch_loc, scratch_loc + (1024*1024), PROT_EXEC|PROT_READ);
-
-        // make sure both the exexutable and scratch memory are writeable for patching
+        ScratchBuffer scratch_buf;
         auto guard1 = WriteableMemoryGuard(map);
-        auto guard2 = WriteableMemoryGuard(scratch_map);
-
-        const std::string& sym_location = section.get(std::string("SteamAPI_Init"), std::string(""));
-        if (sym_location != "") {
-            patch_entrypoint(reinterpret_cast<size_t>(SteamAPI_Init), from_hex(sym_location), scratch_loc);
-        }
+        auto guard2 = scratch_buf.make_writeable();
+        #include "entrypoint_patcher.h"
         
     });
 }

@@ -3,6 +3,7 @@ project('freesteamapi', ['cpp'])
 gen_types = find_program('gen/gen_types.py')
 gen_iface = find_program('gen/gen_iface.py')
 gen_iface_loader = find_program('gen/gen_iface_loader.py')
+gen_entrypoint_patcher = find_program('gen/gen_entrypoint_patcher.py')
 
 openssl = dependency('openssl')
 
@@ -27,11 +28,18 @@ iface_loader = custom_target(
     command : [gen_iface_loader, '@INPUT@', '@OUTPUT@'],
 )
 
+entrypoint_patcher = custom_target(
+    'entrypoint_patcher.h',
+    output : 'entrypoint_patcher.h',
+    command : [gen_entrypoint_patcher, '@OUTPUT@'],
+)
+
 steam_api_srcs = [
     'src/steam_api.cc',
     steam_types,
     ifaces,
     iface_loader,
+    entrypoint_patcher,
     'src/Apps.cc',
     'src/AppList.cc',
     'src/Client.cc',
